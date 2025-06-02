@@ -1,31 +1,11 @@
-# notizen
-- problem bei Andrena: es spiegelt stark
-- LinkedIn use-Case erwähnen
+# Über dieses Repository
 
-- logik-limits
-  - auflösen von referenzen, invertieren einer map ~> wird eigentlich nicht so richtig unterstützt
-  - man muss wissen, was in Kafka Streams gut geht und was nicht
-  - sonst code schwer nachvollziehbar, weil voller subtilitäten (warum plötzlich composite keys?!)
-  - Manche Berechnungen auf consumer/producer seite außerhalb der streaming-Schicht machen. extra service dafür, in arch mitdenken
-- windowed joins, damit daten aufgeräumt werden (alte daten werden "vergessen")
+In diesem Repository zeige ich anhand von Codebeispielen, Aufgaben, dieser README und der Präsentation (presentation.pdf) folgendes:
+- typische Probleme, die bei der Entwicklung von Kafka Streams Applikationen aufkommen
+- Lösungsansätze
+- weiterführende Quellen
 
-
-
-- Motivation am Anfang vor jedem Case: warum zeige ich euch jetzt den Kram?
-- TODO: du darfst den andrena-Folienmaster nicht auf Github hochladen! Mach ein PDF aus der Präsentation
-
-# Eröffnung
-
-- Zeige typische Probleme, die bei der Entwicklung von Kafka Streams Applikationen aufkommen
-- Zeige Lösungen auf
-
-# Kurzeinführung für Anfänger
-
-## Kafka Topic
-- Daten werden in Topics gespeichert
-- ähnlich wie eine Message Queue
-- neue Messages werden immer ans Ende der Topic Partition geschrieben
-- Consumer können auf Topics subscriben
+# Kurzeinführung
 
 ## Kafka Streams
 - Kafka Streams ist ein Daten-Streaming-Framework
@@ -57,19 +37,6 @@ Motivation:
 - Implementieren die Verarbeitungsschritte in Kafka Streams DSL oder PAPI
 - Leicht Unittestbar (siehe Tests in `src/test/java/.../components`)
 
-Für Anfänger:
-- join: KTable erklären
-- KStream vs KTable
-- KTable:
-    - speichert für einen gegebenen key den letzten Value
-    - Beispiel User: für user mit bestimmter ID speicher ich immer den neuesten Zustand vom User
-    - Zustand von Entities verarbeiten
-    - ermöglicht SQL-artige Joins:
-        - join by key
-        - Code-Beispiel Zeigen: UserGroupIdJoinTopology
-    - Löschen: Tombstone (value=null)
-- aggregate - re-partitionierung der user nach groupId
-
 # Parallelisierung und Race Conditions
 
 Motivation:
@@ -98,6 +65,13 @@ Motivation:
     - Kafka Streams unterstützt mich dabei (z.B. durch automatisches Re-Partitioning)
 
 ## Showcase: Race Conditions
+
+> **AUFGABE**:
+> 1. Führe den Test in `RaceConditionIntegrationTest.java` aus und vergewissere dich, dass er grün ist.
+> 2. Erhöhe die Anzahl der Partitionen der Input-Topics. Nun sollte der Test fehlschlagen. Warum?
+> 3. (TO BE IMPLEMENTED) Nutze die Skripte im `scripts` Ordner um die Topics zu inspizieren und herauszufinden, wo die fehlenden Gruppen verloren gehen
+
+
 Durch den `RaceConditionIntegrationTest.java` kann man, wenn man für das `user-lists` Topic
 mehrere Partitionen konfiguriert, einen Bug feststellen, der durch eine Race Condition zustande kommt.
 - Die Race Condition entsteht durch die Flat-Map Operation, die den Key von `grp#` im Topic `user-lists` zu `user#` im Topic `user-to-group-mapping` ändert.
@@ -131,7 +105,7 @@ dass die Reihenfolge in der verschiedene User zur Gruppe hinzugefügt/entfernt w
 
 ### Fix der Race Condition mit Composite Key
 
-- Nutzt man im `user-to-group-mapping`-Topic den Composite Key `grp#-user#`, kann man die Race Condition vermeiden
+- Nutzt man im `user-to-group-mapping`-Topic den Composite Key `grp#-user#`, kann man die Race Condition vermeiden (siehe Topologie mit Composite Key in presentation.pdf)
 - Dadurch ändert sich die Semantik des Topics von User X (key) gehört zu Gruppe Y (value) zu: Es existiert eine Assoziation
   zwischen User X und Gruppe Y (beides im Key ausgedrückt). Der Zustand der Existenz oder Nichtexistenz einer gegebenen Assoziation
   wird dann im Topic unter demselben Key gespeichert und die Records für einen gegebenen `grpY-userX` Key werden alle
@@ -141,11 +115,16 @@ dass die Reihenfolge in der verschiedene User zur Gruppe hinzugefügt/entfernt w
     mit Composite Key
   - Allgemein wird die Topologie komplexer, was sich negativ auf die Wartbarkeit auswirkt
 
+> **AUFGABE**:
+> 1. Erstelle eine Abfolge von Grafiken wie in presentation.pdf Abschnitt "Parallelisierung - Race Conditions" um Message für Message nachzuvollziehen,
+>    weshalb bei Verwendung des Composite-Keys keine Race Condition mehr zustande kommt
+> 2. Implementiere die Topologie mit Composite Keys wie in presentation.pdf dargestellt (Beachte: nicht nur Keys, auch Values sind hier anders)
+
 # Testing
 
 Motivation:
 - Warum man Integrationstests braucht
-- Wie man die leicht implementieren kann
+- Wie man sie leicht implementieren kann
 
 ## Unit-Tests
 Unit-Tests basierend auf `TopologyTestDriver`:
@@ -172,19 +151,21 @@ eingetreten ist. Alternativ könnte man versuchen mit den Assertions zu warten, 
 
 Motivation:
 - Verstehen, warum Benennung interner Topics essenziell ist
+- Zeigen, wie man sicherstellt, dass alle Topics benannt sind
 
-Kafka Streams erzeugt interne Topics u.A. für
-- Repartitioning
-- Changelog (Persistenz der Daten eines State Stores)
-
-> Interne Topics müssen explizit benannt werden
-
-Gründe:
-- Topologie debuggen (z.B. eine erwartete Message ist nicht im Output-Topic. Wo "geht sie verloren"?)
-- Bei Veränderung der Topologie ändert sich die Nummerierung der Topics => State kann nicht geladen werden
+- Kafka Streams erzeugt interne Topics u.A. für
+  - Repartitioning
+  - Changelog (Persistenz der Daten eines State Stores)
+- Interne Topics müssen explizit benannt werden
+- Gründe:
+  - Topologie debuggen (z.B. eine erwartete Message ist nicht im Output-Topic. Wo "geht sie verloren"?)
+  - Bei Veränderung der Topologie ändert sich die Nummerierung der Topics => State kann nicht geladen werden
 
 Maßnahmen
-- Topologie nach unbenannten Topics scannen (TopicNamingTest.java)
+- Topologie nach unbenannten Topics scannen (`TopicNamingTest.java`)
+
+> **AUFGABE**: Führe `TopicNamingTest.java` aus. Finde die Codestellen wo noch explizite
+> Benennung von Topics nötig ist.
 
 Links:
 - https://docs.confluent.io/platform/current/streams/developer-guide/dsl-topology-naming.html
@@ -194,10 +175,14 @@ Links:
 
 ## Data Explosion
 ### Showcase: Data Explosion
-- Test-Fall vorstellen
-- Test ausführen: Nur 2 bis 3 Messages werden vom Consumer empfangen.
-- In DataExplosionTest `statestore.cache.max.bytes=0` einkommentieren ~> simuliert überfüllten Record Cache
-- Test ausführen: Über 40 Messages werden vom Consumer empfangen.
+
+> **AUFGABE**:
+> 1. Führe den Test in `DataExplosionIllustration.java` aus: Nur 2 bis 3 Messages werden vom Consumer empfangen.
+> 2. Kommentiere die `@TestPropertySource`-Annotation über der Klasse ein und führe den Test erneut aus. Wie viele Messages
+>    werden jetzt empfangen? Warum genau diese Anzahl?
+> 3. Recherchiere: Was macht das `statestore.cache.max.bytes` property? Welches Feature des Record Caches ist für die unterschiedliche Anzahl Messages im Output-Topic verantwortlich? 
+
+- Anmerkung `statestore.cache.max.bytes=0` soll Probleme mit dem Record Cache simulieren
 
 ### Maßnahmen
 - Monitoring: records-sent um problem frühzeitig zu erkennen
@@ -216,7 +201,7 @@ Links:
 Link: https://forum.confluent.io/t/partitioning-gotchas-dont-use-avro-json-or-protobuf-for-keys-and-be-aware-of-client-hashing-differences/2718
 
 ## RecordTooLargeException
-- In Kafka ist die maximale Record-Größe beschränkt (Broker: message.max.bytes, Kafka-Streams: max.request.size)
+- In Kafka ist die maximale Record-Größe beschränkt (Broker: `message.max.bytes`, Kafka-Streams: `max.request.size`)
 - Bei groupBy+aggregate ausprobieren oder abschätzen, ob Record zu groß werden kann
 
 # State Stores
@@ -225,7 +210,7 @@ Motivation:
 - Welche Probleme State Stores mit sich bringen
 - Verweis auf Quellen, wo beschrieben wird, wie man die Probleme erkennt und vermeidet
 
-Stateful Operationen, wie die Erzeugung eines KTable, joins, aggregation, ...
+- Stateful Operationen, wie die Erzeugung eines KTable, joins, aggregation, ...
 speichern ihren Zustand in State Stores.
 - Per Default nutzt Kafka Streams einen RocksDB-State Store, bei dem der Zustand auf Festplatte gespeichert wird
 
@@ -308,6 +293,7 @@ Links:
 Kafka Streams ist komplex, deshalb:
 - Anforderungen klären:
     - Welche Features nutzen wir, um welche Anforderung zu erfüllen?
+    - Performance-Anforderungen spezifizieren
 - Nur den Teil der Applikation in Kafka Streams implementieren, der diese Features benötigt
 - Realistische Integrationstests und ggf. E2E-Tests schreiben
 - Von Anfang an Monitoring & Observability implementieren
