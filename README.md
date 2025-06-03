@@ -102,9 +102,10 @@ Frage: Warum funktioniert groupBy + aggregate, obwohl hier ebenfalls eine Key-Ä
 dass die Reihenfolge in der verschiedene User zur Gruppe hinzugefügt/entfernt werden für uns unerheblich ist.
 
 > **AUFGABE**:
-> Als Vorbereitung für diese Aufgabe muss zuerst die Aufgabe im Abschnitt "Internal Topic Naming" bearbeitet werden.
-> Kommentiere die `@TestPropertySource` Annotation über der Testklasse, sowie den Code-Block mit den
-> `Thread.sleep(...)`-Aufrufen ein und nutze die Skripte im `scripts` Ordner um die Topics zu inspizieren und herauszufinden,
+> 1. Als Vorbereitung für diese Aufgabe muss zuerst die Aufgabe im Abschnitt "Internal Topic Naming" bearbeitet werden.
+> 2. Kommentiere die `@TestPropertySource` Annotation über der Testklasse, sowie den Code-Block mit den
+> `Thread.sleep(...)`-Aufrufen ein. Lies den einkommentierten Code und mach dir klar, was er bewirkt.
+> 3. Nutze die Skripte im `scripts`-Ordner um die Topics zu inspizieren und herauszufinden,
 > wo die fehlenden Gruppen verloren gehen.
 
 
