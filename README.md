@@ -69,7 +69,7 @@ Motivation:
 > **AUFGABE**:
 > 1. Führe den Test in `RaceConditionIntegrationTest.java` aus und vergewissere dich, dass er grün ist.
 > 2. Erhöhe die Anzahl der Partitionen der Input-Topics. Nun sollte der Test fehlschlagen. Warum?
-> 3. (TO BE IMPLEMENTED) Nutze die Skripte im `scripts` Ordner um die Topics zu inspizieren und herauszufinden, wo die fehlenden Gruppen verloren gehen
+> 3. Kommentiere die `@TestPropertySource` Annotation über der Testklasse, sowie den Code-Block mit den `Thread.sleep(...)`-Aufrufen ein und nutze die Skripte im `scripts` Ordner um die Topics zu inspizieren und herauszufinden, wo die fehlenden Gruppen verloren gehen
 
 
 Durch den `RaceConditionIntegrationTest.java` kann man, wenn man für das `user-lists` Topic

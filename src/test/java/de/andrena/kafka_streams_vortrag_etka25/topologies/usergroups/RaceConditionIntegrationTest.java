@@ -30,7 +30,7 @@ import static org.awaitility.Awaitility.await;
 
 @SpringBootTest
 @Testcontainers
-@TestPropertySource(properties = "spring.kafka.streams.properties.statestore.cache.max.bytes=0") // avoid internal compaction for easier debugging
+//@TestPropertySource(properties = "spring.kafka.streams.properties.statestore.cache.max.bytes=0") // avoid internal compaction for easier debugging
 class RaceConditionIntegrationTest {
 
     @Container
