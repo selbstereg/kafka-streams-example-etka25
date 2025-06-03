@@ -69,8 +69,6 @@ Motivation:
 > **AUFGABE**:
 > 1. Führe den Test in `RaceConditionIntegrationTest.java` aus und vergewissere dich, dass er grün ist.
 > 2. Erhöhe die Anzahl der Partitionen der Input-Topics. Nun sollte der Test fehlschlagen. Warum?
-> 3. Kommentiere die `@TestPropertySource` Annotation über der Testklasse, sowie den Code-Block mit den `Thread.sleep(...)`-Aufrufen ein und nutze die Skripte im `scripts` Ordner um die Topics zu inspizieren und herauszufinden, wo die fehlenden Gruppen verloren gehen
-
 
 Durch den `RaceConditionIntegrationTest.java` kann man, wenn man für das `user-lists` Topic
 mehrere Partitionen konfiguriert, einen Bug feststellen, der durch eine Race Condition zustande kommt.
@@ -78,7 +76,7 @@ mehrere Partitionen konfiguriert, einen Bug feststellen, der durch eine Race Con
 - Hier ist das Problem, dass ein gegebener User, z.B. `user1` die Gruppe wechseln kann, z.B. von `grp1` zu `grp2`. Die Gruppen können im Topic `user-lists` in
   verschiedenen Partitionen liegen, weshalb die Reihenfolge der Records nicht definiert ist. Gehört `user1` also **zuerst** zu `grp1` und wechselt **dann** zu `grp2`, geht diese **zeitliche**
   Information verloren, wenn die Gruppen in verschiedenen Partitionen liegen. Die Flat-Map Operation könnte den `grp2`-Record vor dem `grp1`-Record verarbeiten.
-- siehe Präsentation für eine detaillierte Illustration des Problems
+- **Siehe presentation.pdf für eine detaillierte Illustration des Problems!**
 - Beachte: im `RaceConditionIntegrationTest.java` und in der Präsentation wird `user1` zunächst von `grp1` entfernt und dann erst `grp2` hinzugefügt. Wird die "Entfernen"-Operation zuletzt verarbeitet, gehört der User zu gar keiner Gruppe mehr und wird aus dem Output-Topic gelöscht.
 - Um dieses Problem zu debuggen ist es sehr hilfreich wenn
   - interne Topics sinnvoll benannt sind
@@ -102,6 +100,13 @@ Ansätze um Race Conditions zu vermeiden:
 
 Frage: Warum funktioniert groupBy + aggregate, obwohl hier ebenfalls eine Key-Änderung stattfindet? Der Grund ist,
 dass die Reihenfolge in der verschiedene User zur Gruppe hinzugefügt/entfernt werden für uns unerheblich ist.
+
+> **AUFGABE**:
+> Als Vorbereitung für diese Aufgabe muss zuerst die Aufgabe im Abschnitt "Internal Topic Naming" bearbeitet werden.
+> Kommentiere die `@TestPropertySource` Annotation über der Testklasse, sowie den Code-Block mit den
+> `Thread.sleep(...)`-Aufrufen ein und nutze die Skripte im `scripts` Ordner um die Topics zu inspizieren und herauszufinden,
+> wo die fehlenden Gruppen verloren gehen.
+
 
 ### Fix der Race Condition mit Composite Key
 
