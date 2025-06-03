@@ -20,6 +20,7 @@ public class UserGroupIdJoinTopology {
         );
 
         KTable<String, String> userToGroupMappingTable = userToGroupMapping.toTable(
+                // Named.as("user-to-group-mapping-table"), // for repartitioning
                 // Materialized.as("user-to-group-mapping-table") // for changelog topic
         );
 
